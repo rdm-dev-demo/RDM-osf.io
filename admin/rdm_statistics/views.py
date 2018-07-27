@@ -603,7 +603,8 @@ class GatherView(TemplateView):
                         for provider in providers:
                             self.count_list = []
                             path = '/'
-                            self.count_project_files(node_id=guid._id, provider=provider, path=path, cookies=cookie)
+                            if provider != 'wiki':^M
+                                self.count_project_files(node_id=guid._id, provider=provider, path=path, cookies=cookie)
                             if len(self.count_list) > 0:
                                 # print(node.id)
                                 self.regist_database(node=node, guid=guid, owner=user, institution=institution,
@@ -686,7 +687,7 @@ class GatherView(TemplateView):
     def count_project_files(self, node_id, provider, path, cookies):
         """recursive count"""
         # print ('path : ' + path)
-        url_api = self.get_wb_url(node_id=node_id, provider=provider, path=path, cookie=cookies)
+        url_api = self.get_wb_url(node_id=node_id, provider=provider, path=re.sub(r'^//','/',path), cookie=cookies)
         # print(url_api)
         self.session.mount('http://', self.adapter)
         headers = {'content-type': 'application/json'}
@@ -705,7 +706,10 @@ class GatherView(TemplateView):
         # parse response json
         if 'data' in response_json.keys():
             for obj in response_json['data']:
-                root, ext = os.path.splitext(obj['id'])
+                if provider != 'osfstorage':
+                    root, ext = os.path.splitext(obj['id'])
+                else:
+                    root, ext = os.path.splitext(obj['attributes']['materialized'])
                 if not ext:
                     ext = 'none'
                 if obj['attributes']['kind'] == 'file':
